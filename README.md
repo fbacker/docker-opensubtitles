@@ -29,3 +29,34 @@ In every base folder of Movie or Serie a .opensubtitle file is created. It store
 When looking for new files these ids will be ignored.
 
 By deleting this file you'll 'reset' the download que and 'best' result will be downloaded again.
+
+## Docker
+
+When running docker container you'll need to specify /movies and /series. You'll also need to provide a /config path with a `local.json` file where setting can be overridden.
+
+Check config/default.json file for setting to override. At minimum you'll need to specify OpenSubtitle username and password
+
+local.json
+
+```json
+{
+  "opensubtitles": {
+    "username": "xyx",
+    "password": "123"
+  }
+}
+```
+
+docker-compose.yaml
+
+```docker
+opensubtitles:
+    image: fredrickbacker/opensubtitles
+    container_name: opensubtitles
+    user: "${UID}:${GID}"
+    volumes:
+        - /path-to-local-movies:/movies
+        - /path-to-local-series:/series
+        - /path-to-temp-downloaded-subs:/tmp
+        - /path-to-config:/config
+```

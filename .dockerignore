@@ -3,3 +3,5 @@ test-config
 logs
 tmp
 .DS_Store
+readme-docker.md
+Dockerfile

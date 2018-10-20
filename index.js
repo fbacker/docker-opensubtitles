@@ -59,6 +59,12 @@ fs.readFile(config.base.extend, 'utf8', (err, content) => {
     // no extra settings
     const e = JSON.parse(content);
     c = config.util.extendDeep({}, config, e);
+    logger.log({
+      level: 'info',
+      label: 'Startup',
+      message: 'Loaded Settings Extends with settings',
+      meta: c,
+    });
   }
   globals.config = c;
   globals.logger = logger;
