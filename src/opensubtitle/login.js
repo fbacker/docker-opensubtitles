@@ -6,7 +6,7 @@ const { config, logger } = globals;
 let loginRetires = 0;
 
 globals.openSubtitles = new OS({
-  useragent: 'TemporaryUserAgent',
+  useragent: 'docker-opensubtitles v1',
   ssl: true,
   username: config.opensubtitles.username,
   password: config.opensubtitles.password,
