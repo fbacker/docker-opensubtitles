@@ -1,0 +1,26 @@
+{
+  "name": "docker-opensubtitle",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "config": "^2.0.1",
+    "lodash": "^4.17.11",
+    "node-fetch": "^2.2.0",
+    "node-watch": "^0.5.8",
+    "opensubtitles-api": "^4.1.0",
+    "shelljs": "^0.8.2",
+    "upath": "^1.1.0",
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.7.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.11.1",
+    "jshint": "^2.9.6"
+  }
+}

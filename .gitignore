@@ -1,0 +1,5 @@
+node_modules
+test-config
+logs
+tmp
+.DS_Store

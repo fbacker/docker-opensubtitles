@@ -1,0 +1,26 @@
+{
+  "opensubtitles": {
+    "username": "",
+    "password": "",
+    "loginRetries": 4,
+    "languages": null
+  },
+  "logger": {
+    "level": "info"
+  },
+  "settings": {
+    "paths": {
+      "movies": "/movies",
+      "series": "/series",
+      "tmp": "./tmp"
+    },
+    "fileTypes": {
+      "info": [".nfo", ".txt"],
+      "subtitles": [".srt"],
+      "media": [".avi", ".mkv", ".mp4"]
+    }
+  },
+  "base": {
+    "extend": "/config/local.json"
+  }
+}
