@@ -32,7 +32,7 @@ const { config, logger } = globals;
  * Load variables to use
  */
 let queParse;
-const queStart = (delay = 5000) => {
+const queStart = (delay = 15000) => {
   queInterval = setInterval(queParse, delay);
 };
 const queStop = () => {
@@ -43,14 +43,15 @@ queParse = () => {
 
   // We got an item, lets do something
   if (queItems.length > 0) {
+    queStop();
+    const item = queItems.shift();
     logger.log({
       level: 'info',
       label: 'QueParse',
       message: `Working Item ${queItems.length} in que`,
+      meta: item,
     });
-    queStop();
 
-    const item = queItems.shift();
     findMediaReferenceFiles(item)
       .then(subsExists)
       .then(readMetadata)
@@ -171,10 +172,10 @@ const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, re
 
 module.exports = () => {
   listDirectory(config.settings.paths.movies).then((files) => {
-    queMovies = queMovies.concat(files.splice(20, 1));
+    queMovies = queMovies.concat(files);
   });
   listDirectory(config.settings.paths.series).then((files) => {
-    queSeries = queSeries.concat(files.splice(4, 1));
+    queSeries = queSeries.concat(files);
   });
 
   login()

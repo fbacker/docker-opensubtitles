@@ -61,7 +61,7 @@ module.exports = _data => new Promise((resolve, reject) => {
         level: 'error',
         label: 'ApiLookupMovies',
         message: 'API Failed',
-        meta: err,
+        meta: { err, body: err.body },
       });
       // @TODO check body, if too many requrest, delay next call.
       if (err.body.indexOf('429 Too Many Requests') > 0) {

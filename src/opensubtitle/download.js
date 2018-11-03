@@ -28,8 +28,8 @@ const download = data => new Promise((resolve, reject) => {
           logger.log({
             level: 'error',
             label: 'DownloadSubtitle',
-            message: 'Failed to write subtitle to disk',
-            meta: data,
+            message: 'Failed to write subtitle to tmp disk',
+            meta: Object.assign({}, data, { filepath }),
           });
           reject(new Error(`Write to disk failed for ${data.filename}`));
         } else {
@@ -64,8 +64,8 @@ const place = data => new Promise((resolve, reject) => {
       logger.log({
         level: 'error',
         label: 'PlaceSubtitles',
-        message: 'Failed to write subtitle to disk',
-        meta: data,
+        message: 'Failed to copy subtitle to final disk',
+        meta: Object.assign({}, data, { from, to }),
       });
       return reject(new Error(`Failed to copy file ${err}`));
     }
@@ -86,8 +86,8 @@ const saveCustomMeta = data => new Promise((resolve, reject) => {
       logger.log({
         level: 'error',
         label: 'DownloadSubtitle',
-        message: 'Failed to write subtitle to disk',
-        meta: data,
+        message: 'Failed to write downloaded id to disk',
+        meta: Object.assign({}, data, { filePath }),
       });
       reject(new Error(`Write to disk failed for ${filePath}`));
     } else {

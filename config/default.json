@@ -12,7 +12,7 @@
     "paths": {
       "movies": "/movies",
       "series": "/series",
-      "tmp": "./tmp"
+      "tmp": "/tmp"
     },
     "fileTypes": {
       "info": [".nfo", ".txt"],
