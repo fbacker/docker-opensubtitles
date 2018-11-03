@@ -1,5 +1,9 @@
 const _ = require('lodash');
 const path = require('path');
+const iso = require('iso-639-2');
+const globals = require('../globals');
+
+const { logger } = globals;
 
 module.exports = _data => new Promise((resolve) => {
   const data = Object.assign({}, _data);
@@ -30,7 +34,7 @@ module.exports = _data => new Promise((resolve) => {
 
   // find all subs
   _.each(data.subtitles, (filepath) => {
-    const name = path.basename(filepath, path.extname(filepath));
+    const name = path.basename(filepath, path.extname(filepath)).toLowerCase();
     let found = false;
     if (name.indexOf(media) === 0) {
       found = true;
@@ -40,8 +44,38 @@ module.exports = _data => new Promise((resolve) => {
       }
     }
     if (found) {
-      // @TODO figure out language
-      const lang = 'eng';
+      let lang = null;
+
+      _.each(['.', '_', '-'], (char) => {
+        if (name.lastIndexOf(char) > 0) {
+          const langSuggestion = name.substring(name.lastIndexOf(char) + 1);
+          let o = _.find(iso, code => code.iso6391 === langSuggestion);
+          if (o) {
+            lang = o.iso6392B;
+            return false;
+          }
+          o = _.find(iso, code => code.iso6392B === langSuggestion);
+          if (o) {
+            lang = langSuggestion;
+            return false;
+          }
+          o = _.find(iso, code => code.name.toLowerCase() === langSuggestion.toLowerCase());
+          if (o) {
+            lang = o.iso6392B;
+            return false;
+          }
+        }
+      });
+      if (!lang) {
+        lang = 'eng';
+        // didn't find anything good
+        logger.log({
+          level: 'error',
+          label: 'FindMediaReferenceFiles',
+          message: `Issue finding lang ${name}`,
+        });
+      }
+
       data.subs.push({ file: filepath, lang });
     }
   });

@@ -20,12 +20,14 @@ const getBlockedFiles = require('./opensubtitle/getBlockedFiles');
 const cleanBlockedFiles = require('./opensubtitle/clean');
 const isFile = require('./files/isFile');
 const watchInteresting = require('./files/watchInteresting');
+const createId = require('./files/createId');
 
 const types = Object.freeze({ series: 'series', movies: 'movies' });
-let queMovies = [];
-let queSeries = [];
+const queMovies = [];
+const queSeries = [];
 const queItems = [];
 let queInterval;
+let queLookupInterval;
 const { config, logger } = globals;
 
 /**
@@ -74,13 +76,25 @@ queParse = () => {
           level: 'error',
           label: 'parse item',
           message: 'Failed to handle item',
-          meta: e,
+          meta: { message: e.message, stack: e.stack.toString() },
         });
-        queStart();
+        if (e.message === 'Too many requests') {
+          queStart(20000);
+        } else {
+          queStart();
+        }
       });
-    return;
   }
+};
 
+let queLookup;
+const queLookupStart = (delay = 100) => {
+  queLookupInterval = setInterval(queLookup, delay);
+};
+const queLookupStop = () => {
+  clearInterval(queLookupInterval);
+};
+queLookup = () => {
   // Lets find movie stuff
   if (queMovies.length > 0) {
     logger.log({
@@ -88,12 +102,13 @@ queParse = () => {
       label: 'QueParse',
       message: `Found ${queMovies.length} movies in que`,
     });
-    queStop();
+    queLookupStop();
 
     const folderName = queMovies.shift();
     const fullPath = path.join(config.settings.paths.movies, folderName);
     const settings = { folderName, fullPath, type: types.movies };
     isDirectory(Object.assign({}, settings))
+      .then(createId)
       .then(findAll)
       .then(getAndExtractFiles)
       .then((obj) => {
@@ -104,7 +119,7 @@ queParse = () => {
           delete qItem.medias;
           queItems.push(qItem);
         });
-        queStart(1);
+        queLookupStart();
       })
       .catch((e) => {
         logger.log({
@@ -113,7 +128,7 @@ queParse = () => {
           message: 'Failed to load series',
           meta: e,
         });
-        queStart(1);
+        queLookupStart();
       });
     return;
   }
@@ -125,12 +140,13 @@ queParse = () => {
       label: 'QueParse',
       message: `Found ${queSeries.length} series in que`,
     });
-    queStop();
+    queLookupStop();
 
     const folderName = queSeries.shift();
     const fullPath = path.join(config.settings.paths.series, folderName);
     const settings = { folderName, fullPath, type: types.series };
     isDirectory(Object.assign({}, settings))
+      .then(createId)
       .then(findAll)
       .then(getAndExtractFiles)
       .then((obj) => {
@@ -141,7 +157,7 @@ queParse = () => {
           delete qItem.medias;
           queItems.push(qItem);
         });
-        queStart(1);
+        queLookupStart();
       })
       .catch((e) => {
         logger.log({
@@ -150,7 +166,7 @@ queParse = () => {
           message: 'Failed to load series',
           meta: e,
         });
-        queStart(1);
+        queLookupStart();
       });
   }
 };
@@ -171,12 +187,14 @@ const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, re
 });
 
 module.exports = () => {
+  /*
   listDirectory(config.settings.paths.movies).then((files) => {
     queMovies = queMovies.concat(files);
   });
   listDirectory(config.settings.paths.series).then((files) => {
     queSeries = queSeries.concat(files);
   });
+  */
 
   login()
     .then(() => {
@@ -186,6 +204,7 @@ module.exports = () => {
         message: 'Connected',
       });
       queStart();
+      queLookupStart();
     })
     .catch((err) => {
       process.exit(`Failed to login ${err}`);

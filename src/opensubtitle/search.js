@@ -12,9 +12,8 @@ module.exports = _data => new Promise((resolve, reject) => {
     label: 'ApiLookupMovies',
     message: 'Search API for a match',
   });
-  const lang = globals.languages;
   const searchParams = {
-    sublanguageid: lang.join(','),
+    sublanguageid: data.lang.join(','),
     path: data.media,
     filename: path.basename(data.media),
     extensions: _.map(config.settings.fileTypes.subtitles, type => type.substring(1)),

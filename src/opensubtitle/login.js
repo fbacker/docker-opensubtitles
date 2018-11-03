@@ -3,8 +3,6 @@ const globals = require('../globals');
 
 const { config, logger } = globals;
 
-let loginRetires = 0;
-
 globals.openSubtitles = new OS({
   useragent: 'docker-opensubtitles v1',
   ssl: true,
@@ -12,7 +10,9 @@ globals.openSubtitles = new OS({
   password: config.opensubtitles.password,
 });
 // @TODO retry doesn't work
-const login = () => new Promise((resolve, reject) => {
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+const loginAction = () => new Promise((resolve, reject) => {
   logger.log({
     level: 'info',
     label: 'OpenSubtitle',
@@ -20,6 +20,22 @@ const login = () => new Promise((resolve, reject) => {
   });
   globals.openSubtitles
     .login()
+    .then((res) => {
+      resolve(res);
+    })
+    .catch((err) => {
+      logger.log({
+        level: 'error',
+        label: 'OpenSubtitle',
+        message: 'Failed to login',
+        meta: err,
+      });
+      reject();
+    });
+});
+
+const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolve, reject) => {
+  loginAction()
     .then((res) => {
       logger.log({
         level: 'info',
@@ -40,12 +56,6 @@ const login = () => new Promise((resolve, reject) => {
           lng = lng.split(',');
           if (lng && lng.length !== 0) {
             languages = lng;
-            logger.log({
-              level: 'info',
-              label: 'OpenSubtitle',
-              message: 'Changed language to Open Subtitles',
-              meta: languages,
-            });
           }
         } catch (err) {
           logger.log({
@@ -58,22 +68,31 @@ const login = () => new Promise((resolve, reject) => {
         // check final, make sure something is here
         if (!languages) languages = ['eng'];
       }
+      /*
+      languages = _.map(languages, (lang) => {
+        const o = _.find(iso, code => code.iso6392B === lang);
+        if (o) return o.iso6391;
+        return lang;
+      });
+      */
       globals.languages = languages;
       globals.userToken = res.token;
+
+      logger.log({
+        level: 'info',
+        label: 'OpenSubtitle',
+        message: 'Set Language to Open Subtitles',
+        meta: languages,
+      });
       resolve();
     })
     .catch((err) => {
-      logger.log({
-        level: 'error',
-        label: 'OpenSubtitle',
-        message: 'Failed to login',
-        meta: err,
-      });
-      loginRetires += 1;
-      if ((loginRetires < login, config.opensubtitles.loginRetries)) {
-        return setTimeout(() => {
-          login();
-        }, 10000);
+      const numOfRetires = loginRetires + 1;
+      if ((numOfRetires < times, config.opensubtitles.loginRetries)) {
+        return wait(delay)
+          .then(login.bind(null, loginAction, delay, times))
+          .then(resolve)
+          .catch(reject);
       }
       return reject(err);
     });

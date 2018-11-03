@@ -8,6 +8,9 @@
   "logger": {
     "level": "info"
   },
+  "gui": {
+    "port": 3001
+  },
   "settings": {
     "paths": {
       "movies": "/movies",
