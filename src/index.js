@@ -23,8 +23,8 @@ const watchInteresting = require('./files/watchInteresting');
 const createId = require('./files/createId');
 
 const types = Object.freeze({ series: 'series', movies: 'movies' });
-const queMovies = [];
-const queSeries = [];
+let queMovies = [];
+let queSeries = [];
 const queItems = [];
 let queInterval;
 let queLookupInterval;
@@ -187,14 +187,12 @@ const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, re
 });
 
 module.exports = () => {
-  /*
   listDirectory(config.settings.paths.movies).then((files) => {
     queMovies = queMovies.concat(files);
   });
   listDirectory(config.settings.paths.series).then((files) => {
     queSeries = queSeries.concat(files);
   });
-  */
 
   login()
     .then(() => {
