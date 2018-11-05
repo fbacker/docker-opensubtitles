@@ -75,13 +75,20 @@ const readConfig = () => new Promise((resolve) => {
       // no extra settings
       const e = JSON.parse(content);
       c = config.util.extendDeep({}, config, e);
-      globals.logger.log({
-        level: 'info',
-        label: 'Startup',
-        message: 'Loaded Settings Extends with settings',
-        meta: c,
-      });
     }
+
+    const oun = process.env.USERNAME && process.env.USERNAME !== '' ? process.env.USERNAME : null;
+    const oup = process.env.USERNAME && process.env.PASSWORD !== '' ? process.env.PASSWORD : null;
+    if (oun) c.opensubtitles.username = oun;
+    if (oup) c.opensubtitles.password = oun;
+
+    globals.logger.log({
+      level: 'info',
+      label: 'Startup',
+      message: 'Loaded Settings Extends with custom settings',
+      meta: c,
+    });
+
     globals.config = c;
     resolve();
   });
