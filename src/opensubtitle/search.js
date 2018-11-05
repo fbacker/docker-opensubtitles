@@ -62,8 +62,7 @@ module.exports = _data => new Promise((resolve, reject) => {
         message: 'API Failed',
         meta: { err, body: err.body },
       });
-      // @TODO check body, if too many requrest, delay next call.
-      if (err.body.indexOf('429 Too Many Requests') > 0) {
+      if (err.body && err.body.indexOf('429 Too Many Requests') > 0) {
         return reject(new Error('Too many requests'));
       }
       reject(new Error(`Search API Failed ${err}`));
