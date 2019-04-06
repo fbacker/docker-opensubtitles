@@ -1,15 +1,8 @@
 const config = require('config');
 const winston = require('winston');
 const fs = require('fs');
-/*
-const express = require('express');
-const http = require('http');
-const socket = require('socket.io');
-const bodyParser = require('body-parser');
-*/
 const globals = require('./src/globals');
 
-// let io;
 /**
  * Configure Logger for output
  */
@@ -31,8 +24,9 @@ const createLogger = () => new Promise((resolve) => {
       new winston.transports.File({
         filename: `logs/${logfile}_error.log`,
         level: 'error',
+        tailable: true,
       }),
-      new winston.transports.File({ filename: `logs/${logfile}_output.log` }),
+      new winston.transports.File({ filename: `logs/${logfile}_output.log`, tailable: true }),
     ],
   });
   const log = new winston.transports.Console({
@@ -93,23 +87,7 @@ const readConfig = () => new Promise((resolve) => {
     resolve();
   });
 });
-/*
-const createWebServer = () => new Promise((resolve) => {
-  const app = express();
-  app.use(express.static('html'));
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(bodyParser.json());
-  // server is alive
-  const server = http.createServer(app);
-  server.listen(config.gui.port, () => {
-    globals.logger.info(`GUI Web listen on port ${config.gui.port}`);
-  });
 
-  // websocket actions
-  io = socket.listen(server);
-  resolve();
-});
-*/
 createLogger()
   .then(readConfig)
   .then(() => {

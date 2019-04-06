@@ -34,14 +34,22 @@ const { config, logger } = globals;
  * Load variables to use
  */
 let queParse;
-const queStart = (delay = 15000) => {
-  queInterval = setInterval(queParse, delay);
-};
 const queStop = () => {
   clearInterval(queInterval);
 };
+const queStart = (delay = 15000) => {
+  queStop(); // make sure only one is running
+  queInterval = setInterval(queParse, delay);
+};
 queParse = () => {
-  if (!globals.userToken) return;
+  if (!globals.userToken) {
+    logger.log({
+      level: 'error',
+      label: 'QueParse',
+      message: 'Not logged in to openhab.',
+    });
+    return;
+  }
 
   // We got an item, lets do something
   if (queItems.length > 0) {
@@ -66,7 +74,7 @@ queParse = () => {
       .then(() => {
         logger.log({
           level: 'debug',
-          label: 'parse item',
+          label: 'QueParse',
           message: 'Is completed',
         });
         queStart();
@@ -74,7 +82,7 @@ queParse = () => {
       .catch((e) => {
         logger.log({
           level: 'error',
-          label: 'parse item',
+          label: 'QueParse',
           message: 'Failed to handle item',
           meta: { message: e.message, stack: e.stack.toString() },
         });
@@ -84,6 +92,12 @@ queParse = () => {
           queStart();
         }
       });
+  } else {
+    logger.log({
+      level: 'debug',
+      label: 'QueParse',
+      message: 'Que is empty',
+    });
   }
 };
 
@@ -209,6 +223,12 @@ module.exports = () => {
     });
 
   watch(config.settings.paths.series, { recursive: true }, (evt, name) => {
+    logger.log({
+      level: 'deubg',
+      label: 'watch',
+      message: 'File changed in series',
+      meta: { evt, name },
+    });
     watchFolder(config.settings.paths.series, name, types.series, evt)
       .then((f) => {
         queSeries.push(f);
@@ -218,6 +238,12 @@ module.exports = () => {
       });
   });
   watch(config.settings.paths.movies, { recursive: true }, (evt, name) => {
+    logger.log({
+      level: 'deubg',
+      label: 'watch',
+      message: 'File changed in movies',
+      meta: { evt, name },
+    });
     watchFolder(config.settings.paths.movies, name, types.movies, evt)
       .then((f) => {
         queMovies.push(f);
