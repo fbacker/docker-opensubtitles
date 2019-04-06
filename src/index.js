@@ -2,7 +2,6 @@
 const path = require('path');
 const _ = require('lodash');
 const watch = require('node-watch');
-
 const globals = require('./globals');
 const login = require('./opensubtitle/login');
 const listDirectory = require('./files/listDirectory');
