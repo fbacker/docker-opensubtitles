@@ -1,4 +1,3 @@
-// const fs = require('fs');
 const path = require('path');
 const _ = require('lodash');
 const watch = require('node-watch');
@@ -25,34 +24,41 @@ const types = Object.freeze({ series: 'series', movies: 'movies' });
 let queMovies = [];
 let queSeries = [];
 const queItems = [];
-let queInterval;
-let queLookupInterval;
 const { config, logger } = globals;
-
+let queLookupIsRunning = false;
+let queIsRunning = false;
 /**
  * Load variables to use
  */
-let queParse;
-const queStop = () => {
-  clearInterval(queInterval);
-};
-const queStart = (delay = 15000) => {
-  queStop(); // make sure only one is running
-  queInterval = setInterval(queParse, delay);
-};
-queParse = () => {
+
+const queParse = () => {
+  logger.log({
+    level: 'debug',
+    label: 'QueParse',
+    message: `Run que, has ${queParse.length} in list`,
+    meta: {
+      queIsRunning,
+      queLookupIsRunning,
+      numOfMovies: queMovies.length,
+      numOfSeries: queSeries.length,
+    },
+  });
+  if (queIsRunning || queMovies.length > 0 || queSeries.length > 0) return;
+  queIsRunning = true;
+
   if (!globals.userToken) {
     logger.log({
       level: 'error',
       label: 'QueParse',
       message: 'Not logged in to openhab.',
     });
+    // @TODO need to re login
+    queIsRunning = false;
     return;
   }
 
   // We got an item, lets do something
   if (queItems.length > 0) {
-    queStop();
     const item = queItems.shift();
     logger.log({
       level: 'info',
@@ -76,7 +82,7 @@ queParse = () => {
           label: 'QueParse',
           message: 'Is completed',
         });
-        queStart();
+        queIsRunning = false;
       })
       .catch((e) => {
         logger.log({
@@ -86,10 +92,13 @@ queParse = () => {
           meta: { message: e.message, stack: e.stack.toString() },
         });
         if (e.message === 'Too many requests') {
-          queStart(20000);
-        } else {
-          queStart();
+          logger.log({
+            level: 'error',
+            label: 'QueParse',
+            message: 'Too many request to the api',
+          });
         }
+        queIsRunning = false;
       });
   } else {
     logger.log({
@@ -97,25 +106,22 @@ queParse = () => {
       label: 'QueParse',
       message: 'Que is empty',
     });
+    queIsRunning = false;
   }
 };
 
-let queLookup;
-const queLookupStart = (delay = 100) => {
-  queLookupInterval = setInterval(queLookup, delay);
-};
-const queLookupStop = () => {
-  clearInterval(queLookupInterval);
-};
-queLookup = () => {
+const queLookup = () => {
+  if (queLookupIsRunning) return;
+  queLookupIsRunning = true;
+
   // Lets find movie stuff
   if (queMovies.length > 0) {
     logger.log({
       level: 'info',
-      label: 'QueParse',
-      message: `Found ${queMovies.length} movies in que`,
+      label: 'QueLookup',
+      message: `Found ${queMovies.length} movies and ${queSeries.length} in que. Run Movie.`,
+      meta: { movies: queMovies.length, series: queSeries.length },
     });
-    queLookupStop();
 
     const folderName = queMovies.shift();
     const fullPath = path.join(config.settings.paths.movies, folderName);
@@ -132,28 +138,25 @@ queLookup = () => {
           delete qItem.medias;
           queItems.push(qItem);
         });
-        queLookupStart();
+        queLookupIsRunning = false;
       })
       .catch((e) => {
         logger.log({
           level: 'error',
-          label: 'gather movies',
+          label: 'QueLookup',
           message: 'Failed to load series',
-          meta: e,
+          meta: { e, fullPath },
         });
-        queLookupStart();
+        queLookupIsRunning = false;
       });
-    return;
-  }
-
-  // Lets find Series stuff
-  if (queSeries.length > 0) {
+  } else if (queSeries.length > 0) {
+    // Lets find Series stuff
     logger.log({
       level: 'info',
-      label: 'QueParse',
-      message: `Found ${queSeries.length} series in que`,
+      label: 'QueLookup',
+      message: `Found ${queMovies.length} movies and ${queSeries.length} in que.  Run Series`,
+      meta: { movies: queMovies.length, series: queSeries.length },
     });
-    queLookupStop();
 
     const folderName = queSeries.shift();
     const fullPath = path.join(config.settings.paths.series, folderName);
@@ -170,20 +173,23 @@ queLookup = () => {
           delete qItem.medias;
           queItems.push(qItem);
         });
-        queLookupStart();
+        queLookupIsRunning = false;
       })
       .catch((e) => {
         logger.log({
           level: 'error',
-          label: 'gather series',
+          label: 'QueLookup',
           message: 'Failed to load series',
           meta: e,
         });
-        queLookupStart();
+        queLookupIsRunning = false;
       });
+  } else {
+    queLookupIsRunning = false;
   }
 };
 
+// a watch file is changed, do we want to add it to check pile?
 const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, reject) => {
   isFile({ fullPath: name, type, event })
     .then(watchInteresting)
@@ -199,31 +205,15 @@ const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, re
     });
 });
 
-module.exports = () => {
-  listDirectory(config.settings.paths.movies).then((files) => {
-    queMovies = queMovies.concat(files);
+const setup = () => {
+  logger.log({
+    level: 'debug',
+    label: 'setup',
+    message: 'Setup watch and list all directories',
   });
-  listDirectory(config.settings.paths.series).then((files) => {
-    queSeries = queSeries.concat(files);
-  });
-
-  login()
-    .then(() => {
-      logger.log({
-        level: 'info',
-        label: 'opensubs',
-        message: 'Connected',
-      });
-      queStart();
-      queLookupStart();
-    })
-    .catch((err) => {
-      process.exit(`Failed to login ${err}`);
-    });
-
   watch(config.settings.paths.series, { recursive: true }, (evt, name) => {
     logger.log({
-      level: 'deubg',
+      level: 'debug',
       label: 'watch',
       message: 'File changed in series',
       meta: { evt, name },
@@ -238,7 +228,7 @@ module.exports = () => {
   });
   watch(config.settings.paths.movies, { recursive: true }, (evt, name) => {
     logger.log({
-      level: 'deubg',
+      level: 'debug',
       label: 'watch',
       message: 'File changed in movies',
       meta: { evt, name },
@@ -251,4 +241,28 @@ module.exports = () => {
         // do nothing
       });
   });
+
+  listDirectory(config.settings.paths.movies).then((files) => {
+    queMovies = queMovies.concat(files);
+  });
+  listDirectory(config.settings.paths.series).then((files) => {
+    queSeries = queSeries.concat(files);
+  });
+};
+
+module.exports = () => {
+  login()
+    .then(() => {
+      logger.log({
+        level: 'info',
+        label: 'opensubs',
+        message: 'Connected',
+      });
+      setup();
+      setInterval(queLookup, 500);
+      setInterval(queParse, 15000);
+    })
+    .catch((err) => {
+      process.exit(`Failed to login ${err}`);
+    });
 };

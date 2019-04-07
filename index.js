@@ -22,19 +22,17 @@ const createLogger = () => new Promise((resolve) => {
     format: combine(timestamp(), myFormat),
     transports: [
       new winston.transports.File({
-        filename: `logs/${logfile}_error.log`,
+        filename: `${logfile}_error.log`,
         level: 'error',
         tailable: true,
       }),
-      new winston.transports.File({ filename: `logs/${logfile}_output.log`, tailable: true }),
+      new winston.transports.Console({
+        level: 'debug',
+        colorize: true,
+        prettyPrint: true,
+      }),
     ],
   });
-  const log = new winston.transports.Console({
-    level: 'debug',
-    colorize: true,
-    prettyPrint: true,
-  });
-  logger.add(log);
 
   globals.logger = logger;
 
@@ -48,12 +46,7 @@ const createLogger = () => new Promise((resolve) => {
     label: 'Startup',
     message: '---------------------------------',
   });
-  logger.log({
-    level: 'info',
-    label: 'Startup',
-    message: 'Loaded Settings',
-    meta: config.settings,
-  });
+
   resolve();
 });
 
@@ -67,6 +60,12 @@ const readConfig = () => new Promise((resolve) => {
     let c = Object.assign({}, config);
     if (!err) {
       // no extra settings
+      globals.logger.log({
+        level: 'info',
+        label: 'Startup',
+        message: 'Loaded Settings',
+        meta: config.settings,
+      });
       const e = JSON.parse(content);
       c = config.util.extendDeep({}, config, e);
     }
