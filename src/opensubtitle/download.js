@@ -1,13 +1,11 @@
-const path = require('path');
-const fs = require('fs');
-const _ = require('lodash');
-const fetch = require('node-fetch');
-const globals = require('../globals');
-
-const { config, logger } = globals;
+import path from 'path';
+import fs from 'fs';
+import _ from 'lodash';
+import fetch from 'node-fetch';
 
 // Download a single subtitle
-const download = data => new Promise((resolve, reject) => {
+const download = (data) => new Promise((resolve, reject) => {
+  const { config, logger } = global;
   logger.log({
     level: 'info',
     label: 'DownloadSubtitle',
@@ -29,7 +27,7 @@ const download = data => new Promise((resolve, reject) => {
             level: 'error',
             label: 'DownloadSubtitle',
             message: 'Failed to write subtitle to tmp disk',
-            meta: Object.assign({}, data, { filepath }),
+            meta: { ...data, filepath },
           });
           reject(new Error(`Write to disk failed for ${data.filename}`));
         } else {
@@ -49,7 +47,8 @@ const download = data => new Promise((resolve, reject) => {
 });
 
 // Place a downloaded sub from tmp to actual position
-const place = data => new Promise((resolve, reject) => {
+const place = (data) => new Promise((resolve, reject) => {
+  const { config, logger } = global;
   const from = path.join(config.settings.paths.tmp, data.filename);
   const to = path.join(data.filePath, data.filename);
   logger.log({
@@ -65,7 +64,7 @@ const place = data => new Promise((resolve, reject) => {
         level: 'error',
         label: 'PlaceSubtitles',
         message: 'Failed to copy subtitle to final disk',
-        meta: Object.assign({}, data, { from, to }),
+        meta: { ...data, from, to },
       });
       return reject(new Error(`Failed to copy file ${err}`));
     }
@@ -73,7 +72,8 @@ const place = data => new Promise((resolve, reject) => {
   });
 });
 
-const saveCustomMeta = data => new Promise((resolve, reject) => {
+const saveCustomMeta = (data) => new Promise((resolve, reject) => {
+  const { logger } = global;
   logger.log({
     level: 'info',
     label: 'PlaceCustom',
@@ -87,7 +87,7 @@ const saveCustomMeta = data => new Promise((resolve, reject) => {
         level: 'error',
         label: 'DownloadSubtitle',
         message: 'Failed to write downloaded id to disk',
-        meta: Object.assign({}, data, { filePath }),
+        meta: { ...data, filePath },
       });
       reject(new Error(`Write to disk failed for ${filePath}`));
     } else {
@@ -96,7 +96,8 @@ const saveCustomMeta = data => new Promise((resolve, reject) => {
   });
 });
 
-module.exports = data => new Promise((resolve, reject) => {
+export default (data) => new Promise((resolve, reject) => {
+  const { logger } = global;
   logger.log({
     level: 'info',
     label: 'DownloadSubtitles',
@@ -105,7 +106,7 @@ module.exports = data => new Promise((resolve, reject) => {
   const promises = [];
   _.each(data.downloads, (item) => {
     const filePath = path.parse(data.media).dir;
-    const p = download(Object.assign({}, item, { filePath, fullPath: data.fullPath }))
+    const p = download({ ...item, filePath, fullPath: data.fullPath })
       .then(place)
       .then(saveCustomMeta);
     promises.push(p);

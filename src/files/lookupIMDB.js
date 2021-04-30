@@ -1,10 +1,8 @@
-const _ = require('lodash');
-const fs = require('fs');
-const globals = require('../globals');
+import _ from 'lodash';
+import fs from 'fs';
 
-const { logger } = globals;
-
-const checkFile = path => new Promise((resolve, reject) => {
+const checkFile = (path) => new Promise((resolve, reject) => {
+  const { logger } = global;
   const regImdb = /imdb.com\/title\/tt(\d)+/g;
   const regImdbTitle = /tt(\d)+/g;
   fs.readFile(path, 'utf8', (err, contents) => {
@@ -40,8 +38,9 @@ const checkFile = path => new Promise((resolve, reject) => {
 });
 
 // Look for IMDB id in files
-module.exports = _data => new Promise((resolve) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve) => {
+  const { logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'ReadIMDB',
@@ -54,7 +53,7 @@ module.exports = _data => new Promise((resolve) => {
   // not finding info simple, lets dig deeper
   const checkLotsOfFiles = () => {
     const sublen = data.fullPath.length + 1;
-    const list = _.map([...data.infos], item => item.substring(sublen, item.length));
+    const list = _.map([...data.infos], (item) => item.substring(sublen, item.length));
     list.sort((a, b) => {
       const al = a.split('/').length;
       const bl = b.split('/').length;

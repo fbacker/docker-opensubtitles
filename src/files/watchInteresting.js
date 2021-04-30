@@ -1,12 +1,10 @@
-const path = require('path');
-const globals = require('../globals');
-
-const { logger, config } = globals;
+import path from 'path';
 
 /**
  *  Is this a dir that we want to work on
  * */
-module.exports = data => new Promise((resolve, reject) => {
+export default (data) => new Promise((resolve, reject) => {
+  const { logger, config } = global;
   logger.log({
     level: 'info',
     label: 'watch interested',

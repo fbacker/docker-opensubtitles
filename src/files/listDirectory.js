@@ -1,12 +1,10 @@
-const fs = require('fs');
-const globals = require('../globals');
-
-const { logger } = globals;
+import fs from 'fs';
 
 /**
  * Get all directories in folder
  */
-module.exports = path => new Promise((resolve, reject) => {
+export default (path) => new Promise((resolve, reject) => {
+  const { logger } = global;
   fs.readdir(path, (err, files) => {
     if (err) {
       logger.log({

@@ -1,10 +1,8 @@
-const shell = require('shelljs');
-const globals = require('../globals');
+import shell from 'shelljs';
 
-const { logger } = globals;
-
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const { logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'ReadMetadata',
@@ -14,16 +12,12 @@ module.exports = _data => new Promise((resolve, reject) => {
   data.height = null;
   data.fps = null;
 
-  let command = `ffprobe -show_entries format=nb_streams -v 0 -of compact=p=0:nk=1  "${
-    data.media
-  }"`;
+  let command = `ffprobe -show_entries format=nb_streams -v 0 -of compact=p=0:nk=1  "${data.media}"`;
   let response = shell.exec(command, { silent: true }).stdout;
   const numOfStreams = parseInt(response, 10);
   for (let i = 0; i < numOfStreams; i += 1) {
     const streamId = i;
-    command = `ffprobe -v 0 -of csv=p=0 -select_streams ${streamId} -show_entries stream=width,height,r_frame_rate "${
-      data.media
-    }"`;
+    command = `ffprobe -v 0 -of csv=p=0 -select_streams ${streamId} -show_entries stream=width,height,r_frame_rate "${data.media}"`;
     response = shell.exec(command, { silent: true }).stdout;
     const values = response.split(',');
     if (values && values.length === 3) {

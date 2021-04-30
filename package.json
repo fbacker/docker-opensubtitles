@@ -3,29 +3,27 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "config": "^2.0.1",
-    "express": "^4.16.4",
-    "iso-639-2": "^1.1.0",
-    "lodash": "^4.17.11",
-    "md5": "^2.2.1",
-    "node-fetch": "^2.2.0",
-    "node-watch": "^0.5.8",
-    "opensubtitles-api": "^4.1.0",
-    "shelljs": "^0.8.2",
-    "socket.io": "^2.1.1",
-    "upath": "^1.1.0",
-    "winston": "^3.1.0"
+    "config": "^3.3.6",
+    "iso-639-2": "^3.0.0",
+    "lodash": "^4.17.21",
+    "md5": "^2.3.0",
+    "node-fetch": "^2.6.1",
+    "node-watch": "^0.7.1",
+    "opensubtitles-api": "^5.1.2",
+    "shelljs": "^0.8.4",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "eslint": "^5.7.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.2",
-    "eslint-plugin-react": "^7.11.1",
-    "jshint": "^2.9.6"
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.25.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.23.2",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "prettier": "^2.2.1",
+    "prettier-eslint": "^12.0.0"
   }
 }

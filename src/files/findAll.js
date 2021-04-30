@@ -1,14 +1,12 @@
-const globals = require('../globals');
-const collectFilesRecursive = require('../utils/collectFilesRecursive');
-
-const { logger } = globals;
+import collectFilesRecursive from '../utils/collectFilesRecursive.js';
 
 /**
  * Get all files recursively
  * * @param {Object} data
  */
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const { logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'findAll',

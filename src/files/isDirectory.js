@@ -1,18 +1,14 @@
-const fs = require('fs');
-const globals = require('../globals');
-
-const { logger } = globals;
+import fs from 'fs';
 
 /**
  *  Is this a dir that we want to work on
  * */
-module.exports = data => new Promise((resolve, reject) => {
+export default (data) => new Promise((resolve, reject) => {
+  const { logger } = global;
   logger.log({
     level: 'info',
     label: 'isDirectory',
-    message: `\n--------------------------------------------------------------\n\tNew Media: ${
-      data.folderName
-    }\n\tPath ${data.fullPath}\n--------------------------------------------------------------`,
+    message: `\n--------------------------------------------------------------\n\tNew Media: ${data.folderName}\n\tPath ${data.fullPath}\n--------------------------------------------------------------`,
   });
   if (fs.lstatSync(data.fullPath).isDirectory()) {
     resolve(data);

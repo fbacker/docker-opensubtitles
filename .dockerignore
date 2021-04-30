@@ -1,5 +1,6 @@
 node_modules
 test-config
+test-movie
 logs
 tmp
 .DS_Store

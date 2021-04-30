@@ -1,37 +1,35 @@
-const path = require('path');
-const _ = require('lodash');
-const watch = require('node-watch');
-const globals = require('./globals');
-const login = require('./opensubtitle/login');
-const listDirectory = require('./files/listDirectory');
-const isDirectory = require('./files/isDirectory');
-const findAll = require('./files/findAll');
-const getAndExtractFiles = require('./files/getAndExtractFiles');
-const findMediaReferenceFiles = require('./files/findMediaReferenceFiles');
-const subsExists = require('./opensubtitle/subsExists');
-const readMetadata = require('./files/readMetadata');
-const lookupIMDB = require('./files/lookupIMDB');
-const search = require('./opensubtitle/search');
-const match = require('./opensubtitle/match');
-const download = require('./opensubtitle/download');
-const getBlockedFiles = require('./opensubtitle/getBlockedFiles');
-const cleanBlockedFiles = require('./opensubtitle/clean');
-const isFile = require('./files/isFile');
-const watchInteresting = require('./files/watchInteresting');
-const createId = require('./files/createId');
+import path from 'path';
+import _ from 'lodash';
+import watch from 'node-watch';
+import fs from 'fs';
+import login from './opensubtitle/login.js';
+import listDirectory from './files/listDirectory.js';
+import isDirectory from './files/isDirectory.js';
+import findAll from './files/findAll.js';
+import getAndExtractFiles from './files/getAndExtractFiles.js';
+import findMediaReferenceFiles from './files/findMediaReferenceFiles.js';
+import subsExists from './opensubtitle/subsExists.js';
+import readMetadata from './files/readMetadata.js';
+import lookupIMDB from './files/lookupIMDB.js';
+import search from './opensubtitle/search.js';
+import match from './opensubtitle/match.js';
+import download from './opensubtitle/download.js';
+import getBlockedFiles from './opensubtitle/getBlockedFiles.js';
+import cleanBlockedFiles from './opensubtitle/clean.js';
+import isFile from './files/isFile.js';
+import watchInteresting from './files/watchInteresting.js';
+import createId from './files/createId.js';
 
 const types = Object.freeze({ series: 'series', movies: 'movies' });
 let queMovies = [];
 let queSeries = [];
 const queItems = [];
-const { config, logger } = globals;
+
 let queLookupIsRunning = false;
 let queIsRunning = false;
-/**
- * Load variables to use
- */
 
 const queParse = () => {
+  const { userToken, logger } = global;
   logger.log({
     level: 'debug',
     label: 'QueParse',
@@ -46,14 +44,26 @@ const queParse = () => {
   if (queIsRunning || queMovies.length > 0 || queSeries.length > 0) return;
   queIsRunning = true;
 
-  if (!globals.userToken) {
+  if (!userToken) {
     logger.log({
       level: 'error',
       label: 'QueParse',
-      message: 'Not logged in to openhab.',
+      message: 'Not logged in to opensubtitles.',
     });
     // @TODO need to re login
-    queIsRunning = false;
+
+    login()
+      .then(() => {
+        logger.log({
+          level: 'info',
+          label: 'opensubs',
+          message: 'Connected',
+        });
+        queIsRunning = false;
+      })
+      .catch((err) => {
+        process.exit(`Failed to login ${err}`);
+      });
     return;
   }
 
@@ -111,6 +121,7 @@ const queParse = () => {
 };
 
 const queLookup = () => {
+  const { config, logger } = global;
   if (queLookupIsRunning) return;
   queLookupIsRunning = true;
 
@@ -126,15 +137,13 @@ const queLookup = () => {
     const folderName = queMovies.shift();
     const fullPath = path.join(config.settings.paths.movies, folderName);
     const settings = { folderName, fullPath, type: types.movies };
-    isDirectory(Object.assign({}, settings))
+    isDirectory({ ...settings })
       .then(createId)
       .then(findAll)
       .then(getAndExtractFiles)
       .then((obj) => {
         _.each(obj.medias, (media) => {
-          const qItem = Object.assign({}, settings, obj, {
-            media,
-          });
+          const qItem = { ...settings, ...obj, media };
           delete qItem.medias;
           queItems.push(qItem);
         });
@@ -161,15 +170,13 @@ const queLookup = () => {
     const folderName = queSeries.shift();
     const fullPath = path.join(config.settings.paths.series, folderName);
     const settings = { folderName, fullPath, type: types.series };
-    isDirectory(Object.assign({}, settings))
+    isDirectory({ ...settings })
       .then(createId)
       .then(findAll)
       .then(getAndExtractFiles)
       .then((obj) => {
         _.each(obj.medias, (media) => {
-          const qItem = Object.assign({}, settings, obj, {
-            media,
-          });
+          const qItem = { ...settings, ...obj, media };
           delete qItem.medias;
           queItems.push(qItem);
         });
@@ -206,63 +213,78 @@ const watchFolder = (mediaFolder, name, type, event) => new Promise((resolve, re
 });
 
 const setup = () => {
+  const { config, logger } = global;
   logger.log({
     level: 'debug',
     label: 'setup',
     message: 'Setup watch and list all directories',
   });
-  watch(config.settings.paths.series, { recursive: true }, (evt, name) => {
-    logger.log({
-      level: 'debug',
-      label: 'watch',
-      message: 'File changed in series',
-      meta: { evt, name },
-    });
-    watchFolder(config.settings.paths.series, name, types.series, evt)
-      .then((f) => {
-        queSeries.push(f);
-      })
-      .catch(() => {
-        // do nothing
-      });
-  });
-  watch(config.settings.paths.movies, { recursive: true }, (evt, name) => {
-    logger.log({
-      level: 'debug',
-      label: 'watch',
-      message: 'File changed in movies',
-      meta: { evt, name },
-    });
-    watchFolder(config.settings.paths.movies, name, types.movies, evt)
-      .then((f) => {
-        queMovies.push(f);
-      })
-      .catch(() => {
-        // do nothing
-      });
-  });
 
-  listDirectory(config.settings.paths.movies).then((files) => {
-    queMovies = queMovies.concat(files);
-  });
-  listDirectory(config.settings.paths.series).then((files) => {
-    queSeries = queSeries.concat(files);
-  });
+  if (config.settings.paths.movies) {
+    if (fs.existsSync(config.settings.paths.movies)) {
+      watch(config.settings.paths.movies, { recursive: true }, (evt, name) => {
+        logger.log({
+          level: 'debug',
+          label: 'watch',
+          message: 'File changed in movies',
+          meta: { evt, name },
+        });
+        watchFolder(config.settings.paths.movies, name, types.movies, evt)
+          .then((f) => {
+            queMovies.push(f);
+          })
+          .catch(() => {
+            // do nothing
+          });
+      });
+    } else {
+      logger.error(`Folder doesn't exists for movies ${config.settings.paths.movies}`);
+      process.exit(1);
+    }
+    listDirectory(config.settings.paths.movies).then((files) => {
+      queMovies = queMovies.concat(files);
+    });
+  }
+
+  if (config.settings.paths.series) {
+    if (fs.existsSync(config.settings.paths.series)) {
+      watch(config.settings.paths.series, { recursive: true }, (evt, name) => {
+        logger.log({
+          level: 'debug',
+          label: 'watch',
+          message: 'File changed in series',
+          meta: { evt, name },
+        });
+        watchFolder(config.settings.paths.series, name, types.series, evt)
+          .then((f) => {
+            queSeries.push(f);
+          })
+          .catch(() => {
+            // do nothing
+          });
+      });
+    } else {
+      logger.error(`Folder doesn't exists for series ${config.settings.paths.series}`);
+      process.exit(1);
+    }
+    listDirectory(config.settings.paths.series).then((files) => {
+      queSeries = queSeries.concat(files);
+    });
+  }
 };
 
-module.exports = () => {
-  login()
-    .then(() => {
-      logger.log({
-        level: 'info',
-        label: 'opensubs',
-        message: 'Connected',
-      });
-      setup();
-      setInterval(queLookup, 500);
-      setInterval(queParse, 15000);
-    })
-    .catch((err) => {
-      process.exit(`Failed to login ${err}`);
+export default () => login()
+  .then(() => {
+    const { logger } = global;
+    logger.log({
+      level: 'info',
+      label: 'opensubs',
+      message: 'Connected',
     });
-};
+    setup();
+    setInterval(queLookup, 500);
+    setInterval(queParse, 15000);
+  })
+  .catch((err) => {
+    process.exit(`Failed to login ${err}`);
+  });

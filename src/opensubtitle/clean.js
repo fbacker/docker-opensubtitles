@@ -1,10 +1,8 @@
-const _ = require('lodash');
-const globals = require('../globals');
+import _ from 'lodash';
 
-const { logger } = globals;
-
-module.exports = _data => new Promise((resolve) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve) => {
+  const { logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'CleanBlockedFiles',

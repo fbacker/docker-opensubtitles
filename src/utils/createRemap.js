@@ -9,6 +9,6 @@
  * @author Victor N. wwww.victorborges.com
  * @see https://gist.github.com/victornpb/51b0c17241ea483dee2c3a20d0f710eb/
  */
-module.exports = (inMin, inMax, outMin, outMax) => function remaper(x) {
+export default (inMin, inMax, outMin, outMax) => function remaper(x) {
   return ((x - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 };

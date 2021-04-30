@@ -1,9 +1,9 @@
-const _ = require('lodash');
+import _ from 'lodash';
 /**
  * Return all words from filename
  * @param {String} filename
  */
-module.exports = (filename) => {
+export default (filename) => {
   const regSplitFile = /(\.|-)/g;
-  return _.filter(filename.toLowerCase().split(regSplitFile), o => !o.match(regSplitFile));
+  return _.filter(filename.toLowerCase().split(regSplitFile), (o) => !o.match(regSplitFile));
 };

@@ -2,7 +2,7 @@
  * Based on strings in filename, try to figure out the quality
  * @param {String} filename
  */
-module.exports = (_filename) => {
+export default (_filename) => {
   const filename = _filename.toLowerCase();
   if (filename.includes(['1080p', '1080i', 'hd', 'fhd'])) {
     return [3840, 2160];

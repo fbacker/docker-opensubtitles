@@ -1,12 +1,10 @@
-const fs = require('fs');
-const globals = require('../globals');
-
-const { logger } = globals;
+import fs from 'fs';
 
 /**
  *  Is this a dir that we want to work on
  * */
-module.exports = data => new Promise((resolve, reject) => {
+export default (data) => new Promise((resolve, reject) => {
+  const { logger } = global;
   if (data.event && data.event === 'remove') {
     return resolve(data);
   }

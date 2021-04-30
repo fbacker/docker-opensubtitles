@@ -1,12 +1,10 @@
-const path = require('path');
-const _ = require('lodash');
-const globals = require('../globals');
-
-const { logger, openSubtitles, config } = globals;
+import path from 'path';
+import _ from 'lodash';
 
 // Using OpenSubtitles API, grab all results
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const { logger, openSubtitles, config } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'ApiLookupMovies',
@@ -16,7 +14,7 @@ module.exports = _data => new Promise((resolve, reject) => {
     sublanguageid: data.lang.join(','),
     path: data.media,
     filename: path.basename(data.media),
-    extensions: _.map(config.settings.fileTypes.subtitles, type => type.substring(1)),
+    extensions: _.map(config.settings.fileTypes.subtitles, (type) => type.substring(1)),
     limit: 'all',
     gzip: false,
   };

@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const data = { ..._data };
 
   const filePath = path.join(data.fullPath, '.opensubtitles');
   fs.readFile(filePath, 'utf8', (err, content) => {

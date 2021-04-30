@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 /**
  * Get a list of all files
@@ -31,4 +31,4 @@ const collectFilesRecursive = (dir, done) => {
     return null;
   });
 };
-module.exports = collectFilesRecursive;
+export default collectFilesRecursive;

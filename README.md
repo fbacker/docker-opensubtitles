@@ -10,7 +10,14 @@ This will place the OpenSubtitles files on the actual file server automatically.
 
 Start the docker container with paths to movies and series. At first startup it will check all your files for matches. If you already have subs for the media it will be ignored.
 
-It will connect to your OpenSubtitle account and use your custom settings from the web for languages that you want.
+It will connect to your OpenSubtitle account and use your custom settings from the web for languages that you want. You can also specify the languages you want in the config file.
+
+By default it uses `https://api.opensubtitles.org:443/xml-rpc` but can be overriden in config
+
+```{
+  "opensubtitles": {
+    "endpoint": "custom endpoint"
+```
 
 ### Why it's special
 
@@ -18,7 +25,7 @@ Not only it will place subs on your actual server so you don't need to re-find t
 
 ## All in place, how to work with it
 
-St startup it will look thru all media for missing files. Due not to 'overload' the API it has a long cooldown.
+At startup it will look thru all media for missing files. Due not to 'overload' the API it has a long cooldown.
 
 When a new media is added it will automatically try to find a match and place the subtitle files in the same folder.
 
@@ -32,11 +39,11 @@ In every base folder of Movie or Serie a .opensubtitle file is created. It store
 
 When looking for new files these ids will be ignored (has already been downloaded once).
 
-By deleting this file you'll 'reset' the download que and 'best' result will be downloaded again.
+By deleting this file you'll 'reset' the download que and 'best effort' subtitle will be downloaded again.
 
 ## Docker
 
-When running docker container you'll need to specify /movies and /series. You'll also need to provide a /config path with a `local.json` file where setting can be overridden.
+When running docker container you'll need to specify /movies and /series. You'll also need to provide a /config path with a `local.json` file where setting can be overridden. If the configuration file has the path 'null' for either movies/series we won't look for subtitles.
 
 Check config/default.json file for setting to override. At minimum you'll need to specify OpenSubtitle username and password. These can also be set from environment variables.
 

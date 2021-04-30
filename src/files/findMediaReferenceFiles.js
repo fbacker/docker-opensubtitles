@@ -1,12 +1,10 @@
-const _ = require('lodash');
-const path = require('path');
-const iso = require('iso-639-2');
-const globals = require('../globals');
+import _ from 'lodash';
+import path from 'path';
+import { iso6392 } from 'iso-639-2';
 
-const { logger } = globals;
-
-module.exports = _data => new Promise((resolve) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve) => {
+  const { logger } = global;
+  const data = { ..._data };
   const media = path.basename(data.media, path.extname(data.media)).toLowerCase();
   data.season = null;
   data.episode = null;
@@ -49,22 +47,23 @@ module.exports = _data => new Promise((resolve) => {
       _.each(['.', '_', '-'], (char) => {
         if (name.lastIndexOf(char) > 0) {
           const langSuggestion = name.substring(name.lastIndexOf(char) + 1);
-          let o = _.find(iso, code => code.iso6391 === langSuggestion);
+          let o = _.find(iso6392, (code) => code.iso6391 === langSuggestion);
           if (o) {
             lang = o.iso6392B;
             return false;
           }
-          o = _.find(iso, code => code.iso6392B === langSuggestion);
+          o = _.find(iso6392, (code) => code.iso6392B === langSuggestion);
           if (o) {
             lang = langSuggestion;
             return false;
           }
-          o = _.find(iso, code => code.name.toLowerCase() === langSuggestion.toLowerCase());
+          o = _.find(iso6392, (code) => code.name.toLowerCase() === langSuggestion.toLowerCase());
           if (o) {
             lang = o.iso6392B;
             return false;
           }
         }
+        return false;
       });
       if (!lang) {
         lang = 'eng';

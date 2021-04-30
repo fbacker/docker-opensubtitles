@@ -1,7 +1,13 @@
-const config = require('config');
-const winston = require('winston');
-const fs = require('fs');
-const globals = require('./src/globals');
+import config from 'config';
+import winston from 'winston';
+import fs from 'fs';
+import startup from './src/index.js';
+
+global.config = null;
+global.logger = null;
+global.userToken = null;
+global.languages = [];
+global.openSubtitles = null;
 
 /**
  * Configure Logger for output
@@ -15,14 +21,14 @@ const createLogger = () => new Promise((resolve) => {
   const logfile = new Date()
     .toISOString()
     .split('T')
-    .map(value => value.split('.')[0])
+    .map((value) => value.split('.')[0])
     .join('_');
   const logger = winston.createLogger({
     level: config.logger.level,
     format: combine(timestamp(), myFormat),
     transports: [
       new winston.transports.File({
-        filename: `${logfile}_error.log`,
+        filename: `logs/${logfile}_error.log`,
         level: 'error',
         tailable: true,
       }),
@@ -34,7 +40,7 @@ const createLogger = () => new Promise((resolve) => {
     ],
   });
 
-  globals.logger = logger;
+  global.logger = logger;
 
   logger.log({
     level: 'info',
@@ -55,17 +61,13 @@ const createLogger = () => new Promise((resolve) => {
  */
 const readConfig = () => new Promise((resolve) => {
   let path = config.base.extend;
-  if (process.env.NODE_ENV !== 'production') path = './test-config/local.json';
+  if (process.env.NODE_ENV !== 'production') {
+    path = './test-config/local.json';
+  }
   fs.readFile(path, 'utf8', (err, content) => {
-    let c = Object.assign({}, config);
+    let c = { ...config };
     if (!err) {
       // no extra settings
-      globals.logger.log({
-        level: 'info',
-        label: 'Startup',
-        message: 'Loaded Settings',
-        meta: config.settings,
-      });
       const e = JSON.parse(content);
       c = config.util.extendDeep({}, config, e);
     }
@@ -75,14 +77,14 @@ const readConfig = () => new Promise((resolve) => {
     if (oun) c.opensubtitles.username = oun;
     if (oup) c.opensubtitles.password = oun;
 
-    globals.logger.log({
+    global.logger.log({
       level: 'info',
       label: 'Startup',
-      message: 'Loaded Settings Extends with custom settings',
+      message: 'Loaded Settings',
       meta: c,
     });
 
-    globals.config = c;
+    global.config = c;
     resolve();
   });
 });
@@ -90,10 +92,11 @@ const readConfig = () => new Promise((resolve) => {
 createLogger()
   .then(readConfig)
   .then(() => {
-    require('./src/index')('start');
+    console.log('done');
+    startup();
   })
   .catch((err) => {
-    globals.logger.log({
+    global.logger.log({
       level: 'error',
       label: 'Startup',
       message: 'Failed to start',

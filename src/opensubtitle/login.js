@@ -1,24 +1,15 @@
-const OS = require('opensubtitles-api');
-const globals = require('../globals');
+import OS from 'opensubtitles-api';
 
-const { config, logger } = globals;
-
-globals.openSubtitles = new OS({
-  useragent: 'docker-opensubtitles v1',
-  ssl: true,
-  username: config.opensubtitles.username,
-  password: config.opensubtitles.password,
-});
-// @TODO retry doesn't work
-const wait = ms => new Promise(r => setTimeout(r, ms));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const loginAction = () => new Promise((resolve, reject) => {
+  const { logger } = global;
   logger.log({
     level: 'info',
     label: 'OpenSubtitle',
     message: 'Try to login',
   });
-  globals.openSubtitles
+  global.openSubtitles
     .login()
     .then((res) => {
       resolve(res);
@@ -35,6 +26,17 @@ const loginAction = () => new Promise((resolve, reject) => {
 });
 
 const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolve, reject) => {
+  const { config, logger, openSubtitles } = global;
+  if (!openSubtitles) {
+    global.openSubtitles = new OS({
+      useragent: 'docker-opensubtitles v1',
+      ssl: true,
+      endpoint: config.opensubtitles.endpoint ? config.opensubtitles.endpoint : null,
+      username: config.opensubtitles.username,
+      password: config.opensubtitles.password,
+    });
+  }
+
   loginAction()
     .then((res) => {
       logger.log({
@@ -52,16 +54,18 @@ const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolv
       let { languages } = config.opensubtitles;
       if (!languages) {
         try {
-          let lng = res.userinfo.UserPreferedLanguages;
-          lng = lng.split(',');
-          if (lng && lng.length !== 0) {
-            languages = lng;
+          if (res.userinfo.UserPreferedLanguages) {
+            let lng = res.userinfo.UserPreferedLanguages;
+            lng = lng.split(',');
+            if (lng && lng.length !== 0) {
+              languages = lng;
+            }
           }
         } catch (err) {
           logger.log({
             level: 'error',
             label: 'OpenSubtitle',
-            message: `failed to parse ${err}`,
+            message: `failed to parse ${err} userinfo ${res.userinfo}`,
           });
         }
 
@@ -75,8 +79,8 @@ const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolv
         return lang;
       });
       */
-      globals.languages = languages;
-      globals.userToken = res.token;
+      global.languages = languages;
+      global.userToken = res.token;
 
       logger.log({
         level: 'info',
@@ -97,4 +101,4 @@ const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolv
       return reject(err);
     });
 });
-module.exports = login;
+export default login;

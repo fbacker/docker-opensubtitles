@@ -1,14 +1,12 @@
-const path = require('path');
-const _ = require('lodash');
-const globals = require('../globals');
-
-const { config, logger } = globals;
+import path from 'path';
+import _ from 'lodash';
 
 /**
  * Get media files that we are interrested in
  */
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const { config, logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'getAndExtractFiles',

@@ -1,17 +1,15 @@
-const _ = require('lodash');
-const path = require('path');
-const createRemap = require('../utils/createRemap');
-const findDuplicates = require('../utils/findDuplicates');
-const findKeysBasedOnName = require('../utils/findKeysBasedOnName');
-const findResolutionBasedOnName = require('../utils/findResolutionBasedOnName');
-const globals = require('../globals');
-
-const { logger } = globals;
+import _ from 'lodash';
+import path from 'path';
+import createRemap from '../utils/createRemap.js';
+import findDuplicates from '../utils/findDuplicates.js';
+import findKeysBasedOnName from '../utils/findKeysBasedOnName.js';
+import findResolutionBasedOnName from '../utils/findResolutionBasedOnName.js';
 
 // Try to calculate results from IMDB
 // What is a best match for me?
-module.exports = _data => new Promise((resolve, reject) => {
-  const data = Object.assign({}, _data);
+export default (_data) => new Promise((resolve, reject) => {
+  const { logger } = global;
+  const data = { ..._data };
   logger.log({
     level: 'info',
     label: 'ReadFindBestMatch',
@@ -25,7 +23,7 @@ module.exports = _data => new Promise((resolve, reject) => {
         const mapFPS = createRemap(0, 5, 5, 0);
         const mapResolution = createRemap(0, 1000, 10, 0);
 
-        const part = Object.assign({}, _part);
+        const part = { ..._part };
         // console.log(data, part);
         const calculate = {};
 
@@ -65,7 +63,7 @@ module.exports = _data => new Promise((resolve, reject) => {
         });
         return part;
       });
-      const sorted = _.sortBy(list, o => parseInt(o.calculate.score * 10000, 10));
+      const sorted = _.sortBy(list, (o) => parseInt(o.calculate.score * 10000, 10));
       _.reverse(sorted);
       const won = list[0];
       logger.log({
