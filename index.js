@@ -60,13 +60,16 @@ const createLogger = () => new Promise((resolve) => {
  * Read extra config to extend
  */
 const readConfig = () => new Promise((resolve) => {
+  const { logger } = global;
   let path = config.base.extend;
   if (process.env.NODE_ENV !== 'production') {
     path = './test-config/local.json';
   }
   fs.readFile(path, 'utf8', (err, content) => {
     let c = { ...config };
-    if (!err) {
+    if (err) {
+      logger.info('No extra config file to merge');
+    } else if (!err) {
       // no extra settings
       const e = JSON.parse(content);
       c = config.util.extendDeep({}, config, e);
@@ -77,7 +80,7 @@ const readConfig = () => new Promise((resolve) => {
     if (oun) c.opensubtitles.username = oun;
     if (oup) c.opensubtitles.password = oun;
 
-    global.logger.log({
+    logger.log({
       level: 'info',
       label: 'Startup',
       message: 'Loaded Settings',
@@ -92,14 +95,19 @@ const readConfig = () => new Promise((resolve) => {
 createLogger()
   .then(readConfig)
   .then(() => {
-    console.log('done');
     startup();
   })
   .catch((err) => {
-    global.logger.log({
-      level: 'error',
-      label: 'Startup',
-      message: 'Failed to start',
-      meta: err,
-    });
+    const { logger } = global;
+    if (logger) {
+      logger.log({
+        level: 'error',
+        label: 'Startup',
+        message: 'Failed to start',
+        meta: err,
+      });
+    } else {
+      console.error('Failed to start', err);
+    }
+    process.exit(1);
   });

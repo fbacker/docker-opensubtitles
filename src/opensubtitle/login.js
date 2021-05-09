@@ -54,7 +54,7 @@ const login = (loginRetires = 0, times = 3, delay = 1000) => new Promise((resolv
       let { languages } = config.opensubtitles;
       if (!languages) {
         try {
-          if (res.userinfo.UserPreferedLanguages) {
+          if (res.userinfo && res.userinfo.UserPreferedLanguages) {
             let lng = res.userinfo.UserPreferedLanguages;
             lng = lng.split(',');
             if (lng && lng.length !== 0) {
