@@ -78,7 +78,7 @@ const readConfig = () => new Promise((resolve) => {
     const oun = process.env.USERNAME && process.env.USERNAME !== '' ? process.env.USERNAME : null;
     const oup = process.env.USERNAME && process.env.PASSWORD !== '' ? process.env.PASSWORD : null;
     if (oun) c.opensubtitles.username = oun;
-    if (oup) c.opensubtitles.password = oun;
+    if (oup) c.opensubtitles.password = oup;
 
     logger.log({
       level: 'info',
